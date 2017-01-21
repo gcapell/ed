@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"strings"
 )
 
 type Command struct {
@@ -35,5 +37,23 @@ func parse(s *bufio.Scanner) (Command, error, bool) {
 		err := s.Err()
 		return Command{}, err, err == nil
 	}
-	return Command{name: 'e', arg: "banana"}, nil, false
+	line := s.Text()
+	log.Printf("parsing %q", line)
+	// let's be really stupid
+	chunks := strings.Fields(line)
+	var cmd Command
+	if len(chunks) < 1 {
+		return cmd, fmt.Errorf("need at least one field"), false
+	}
+	if len(chunks[0]) != 1 {
+		return cmd, fmt.Errorf("first field expected to be one command character, got %q", chunks[0]), false
+	}
+	cmd.name = chunks[0][0]
+	if len(chunks) > 2 {
+		return cmd, fmt.Errorf("expected at most one arg"), false
+	}
+	if len(chunks) == 2 {
+		cmd.arg = chunks[1]
+	}
+	return cmd, nil, false
 }
