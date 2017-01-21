@@ -21,7 +21,7 @@ func Parse(r io.Reader, ch chan Command) {
 		switch {
 		case eof:
 			return
-		case err:
+		case err != nil:
 			fmt.Fprint(os.Stderr, err)
 		default:
 			ch <- cmd
@@ -30,13 +30,10 @@ func Parse(r io.Reader, ch chan Command) {
 	close(ch)
 }
 
-var first = true
-
-func parse(s *bufio.Scanner) (Command, bool, bool) {
-	if first {
-		first = false
-		return Command{name: 'e', arg: "banana"}, false, false
-	} else {
-		return Command{}, false, true
+func parse(s *bufio.Scanner) (Command, error, bool) {
+	if !s.Scan() {
+		err := s.Err()
+		return Command{}, err, err == nil
 	}
+	return Command{name: 'e', arg: "banana"}, nil, false
 }
