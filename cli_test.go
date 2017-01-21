@@ -5,35 +5,43 @@ import (
 	"testing"
 )
 
-func TestE(t *testing.T) {
-	testData := []struct {
-		input string
-		cmd   Command
-	}{
-		{"e /tmp/demo.txt", Command{name: 'e', arg: "/tmp/demo.txt"}},
-		{"1,3p", Command{name: 'p', addr1: "1", addr2: "3"}},
-		{"p", Command{name: 'p'}},
-		{"1 p", Command{name: 'p', addr1: "1"}},
-	}
-	for _, td := range testData {
-		cmds := parseAll(td.input)
-		if len(cmds) != 1 {
-			t.Errorf("parseAll(%q) expected one cmd, got %v", td.input, cmds)
-			continue
-		}
-		if cmds[0] != td.cmd {
-			t.Errorf("parse(%q) got %s, want %s", td.input, cmds[0], td.cmd)
+var singleLineCommands = []struct {
+	input string
+	cmd   Command
+}{
+	{"e /tmp/demo.txt", Command{name: 'e', arg: "/tmp/demo.txt"}},
+	{"1,3p", Command{name: 'p', addr1: "1", addr2: "3"}},
+	{"p", Command{name: 'p'}},
+	{"1 p", Command{name: 'p', addr1: "1"}},
+}
+
+func TestParseLine(t *testing.T) {
+	for _, td := range singleLineCommands {
+		if cmd := parseLine(td.input); cmd != td.cmd {
+			t.Errorf("parseLine(%q) got %s, want %s", td.input, cmd, td.cmd)
 		}
 	}
 }
 
-func parseAll(s string) []Command {
-	r := bytes.NewBufferString(s)
+func TestParse(t *testing.T) {
+	input := ""
+	for _, td := range singleLineCommands {
+		input += td.input + "\n"
+	}
+
+	r := bytes.NewBufferString(input)
 	ch := make(chan Command)
 	go Parse(r, ch)
-	var reply []Command
+
+	pos := 0
 	for cmd := range ch {
-		reply = append(reply, cmd)
+		if pos == len(singleLineCommands) {
+			t.Fatal("more commands returned than expected")
+		}
+		td := singleLineCommands[pos]
+		pos++
+		if cmd != td.cmd {
+			t.Errorf("parse(%q) got %s, want %s", td.input, cmd, td.cmd)
+		}
 	}
-	return reply
 }

@@ -44,7 +44,7 @@
  * build up tests for: command parser, address resolver, each command
  * start with e(dit) p(print) and trivial (line number) addresses, build up
 
-# command parser (start 3:57, )
+# command parser (start 3:57, stop 5:06; start 8:30, stop )
 
  * needs to work interactively, i.e. know where one command ends, the next finishes
  * Given a Reader and a chan Command, run until reader exits (when we close the chan)

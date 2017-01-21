@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strings"
+	"regexp"
 )
 
 type Command struct {
@@ -44,25 +44,27 @@ func parse(s *bufio.Scanner) (Command, bool) {
 		return Command{}, true
 	}
 	line := s.Text()
-	log.Printf("parsing %q", line)
-	// let's be really stupid
-	chunks := strings.Fields(line)
-	if len(chunks) < 1 {
-		return errorf("need at least one field")
-	}
-	if len(chunks[0]) != 1 {
-		return errorf("first field expected to be one command character, got %q", chunks[0])
-	}
-	if len(chunks) > 2 {
-		return errorf("expected at most one arg")
-	}
-	cmd := Command{name: chunks[0][0]}
-	if len(chunks) == 2 {
-		cmd.arg = chunks[1]
-	}
-	return cmd, false
+
+	return parseLine(line), false
 }
 
+var cmdRegexp = regexp.MustCompile("^ *([0-9]+)? *,? *?([0-9]+)? *([a-zA-Z]) *([^ ]+)?$")
+
+// parseLine matches a string as "[addr1[,addr2]] command" (with optional whitespace)
+func parseLine(s string) Command {
+	m := cmdRegexp.FindStringSubmatch(s)
+	log.Printf("parse(%s)->%q", s, m)
+	if len(m) > 0 {
+		return Command{
+			name:  m[3][0],
+			addr1: m[1],
+			addr2: m[2],
+			arg:   m[4],
+		}
+	}
+	return Command{}
+
+}
 func errorf(format string, args ...interface{}) (Command, bool) {
 	return Command{parseError: fmt.Sprintf(format, args)}, false
 }
