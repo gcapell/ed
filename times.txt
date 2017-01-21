@@ -1,0 +1,35 @@
+15:20 skim manual
+ * buffer of lines, with a current line (need both for testing correctness)
+ * commands have zero, one or two addresses (each specifying a line)
+ * ., $, 123 seem easy.  first line is 0 or 1 ? ... answer is 1
+ * let's skip named addresses for now
+ * address /re/ seems moderately easy
+ * ditto ?re?
+ * various addressing tricks, attack them one at a time
+ * skip the "addr ; addr" trick for now, just support ,
+ * commands:
+ 	a - append
+	b - browse (print a 'page')
+	c - change - delete, then replace
+	d - delete
+	e,E - replace buffer with file (remember filename)
+	r,w,W - read/write/append file
+	f - print filename
+	g,v - global regex
+	s - regex substitute
+	i - insert 
+	j - join
+	k - mark address
+	l - list
+	m - move
+	t - transfer (copy range to address)
+	p - print
+	q,Q - quit
+	u - undo!
+	= - print line number of dot
+	
+	interrupt - escape
+ * when reading, discard NULs and all after last newline.
+ 
+15:40 break
+
