@@ -9,15 +9,15 @@ import (
 )
 
 type Command struct {
-	err                 error  // We couldn't parse this
+	parseError          string // We couldn't parse this
 	name                byte   // e -> edit, ...
 	addr1, addr2, addr3 string // optional address
 	arg                 string // e.g. text to insert.  May need to expand on this for complex commands
 }
 
 func (c Command) String() string {
-	if c.err != nil {
-		return fmt.Sprintf("Command err %s", c.err.Error())
+	if c.parseError != "" {
+		return fmt.Sprintf("Command err %s", c.parseError)
 	}
 	return fmt.Sprintf("Command{%s,%s,%s,%s [%s]}",
 		string(c.name), c.addr1, c.addr2, c.addr3, c.arg)
@@ -64,5 +64,5 @@ func parse(s *bufio.Scanner) (Command, bool) {
 }
 
 func errorf(format string, args ...interface{}) (Command, bool) {
-	return Command{err: fmt.Errorf(format, args)}, false
+	return Command{parseError: fmt.Sprintf(format, args)}, false
 }
