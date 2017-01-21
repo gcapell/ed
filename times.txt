@@ -1,4 +1,5 @@
-15:20 skim manual
+# skim manual (20m)
+
  * buffer of lines, with a current line (need both for testing correctness)
  * commands have zero, one or two addresses (each specifying a line)
  * ., $, 123 seem easy.  first line is 0 or 1 ? ... answer is 1
@@ -31,5 +32,21 @@
 	interrupt - escape
  * when reading, discard NULs and all after last newline.
  
-15:40 break
+# plan (10m)
 
+ * want a buffer with lines and dot (current line)
+ * need to parse commands into addresses, command (letter), extra params
+ * buffer needs to convert address descriptions into line numbers
+ * commands will be functions which operate on a buffer
+ * for testing want a nice representation of buffer (lines + .).  Simplest
+ 	might be: linenum\nline1\n...
+ * want a main to wrap around buffer, command loop
+ * build up tests for: command parser, address resolver, each command
+ * start with e(dit) p(print) and trivial (line number) addresses, build up
+
+# command parser (start 3:57, )
+
+ * needs to work interactively, i.e. know where one command ends, the next finishes
+ * Given a Reader and a chan Command, run until reader exits (when we close the chan)
+ * can test by wrapping text in a Reader, draining the Chan.
+ 

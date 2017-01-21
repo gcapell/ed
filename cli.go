@@ -1,6 +1,11 @@
 package cli
 
-import "io"
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+)
 
 type Command struct {
 	name                byte   // e -> edit, ...
@@ -9,6 +14,29 @@ type Command struct {
 }
 
 func Parse(r io.Reader, ch chan Command) {
-	ch <- Command{name: 'e', arg: "banana"}
+	s := bufio.NewScanner(r)
+	defer close(ch)
+	for {
+		cmd, err, eof := parse(s)
+		switch {
+		case eof:
+			return
+		case err:
+			fmt.Fprint(os.Stderr, err)
+		default:
+			ch <- cmd
+		}
+	}
 	close(ch)
+}
+
+var first = true
+
+func parse(s *bufio.Scanner) (Command, bool, bool) {
+	if first {
+		first = false
+		return Command{name: 'e', arg: "banana"}, false, false
+	} else {
+		return Command{}, false, true
+	}
 }
