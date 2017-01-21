@@ -5,55 +5,64 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"strings"
 )
 
 type Command struct {
+	err                 error  // We couldn't parse this
 	name                byte   // e -> edit, ...
 	addr1, addr2, addr3 string // optional address
 	arg                 string // e.g. text to insert.  May need to expand on this for complex commands
+}
+
+func (c Command) String() string {
+	if c.err != nil {
+		return fmt.Sprintf("Command err %s", c.err.Error())
+	}
+	return fmt.Sprintf("Command{%s,%s,%s,%s [%s]}",
+		string(c.name), c.addr1, c.addr2, c.addr3, c.arg)
 }
 
 func Parse(r io.Reader, ch chan Command) {
 	s := bufio.NewScanner(r)
 	defer close(ch)
 	for {
-		cmd, err, eof := parse(s)
-		switch {
-		case eof:
+		if cmd, eof := parse(s); eof {
 			return
-		case err != nil:
-			fmt.Fprint(os.Stderr, err)
-		default:
+		} else {
 			ch <- cmd
 		}
 	}
 	close(ch)
 }
 
-func parse(s *bufio.Scanner) (Command, error, bool) {
+func parse(s *bufio.Scanner) (Command, bool) {
 	if !s.Scan() {
-		err := s.Err()
-		return Command{}, err, err == nil
+		if err := s.Err(); err != nil {
+			return errorf(err.Error())
+		}
+		return Command{}, true
 	}
 	line := s.Text()
 	log.Printf("parsing %q", line)
 	// let's be really stupid
 	chunks := strings.Fields(line)
-	var cmd Command
 	if len(chunks) < 1 {
-		return cmd, fmt.Errorf("need at least one field"), false
+		return errorf("need at least one field")
 	}
 	if len(chunks[0]) != 1 {
-		return cmd, fmt.Errorf("first field expected to be one command character, got %q", chunks[0]), false
+		return errorf("first field expected to be one command character, got %q", chunks[0])
 	}
-	cmd.name = chunks[0][0]
 	if len(chunks) > 2 {
-		return cmd, fmt.Errorf("expected at most one arg"), false
+		return errorf("expected at most one arg")
 	}
+	cmd := Command{name: chunks[0][0]}
 	if len(chunks) == 2 {
 		cmd.arg = chunks[1]
 	}
-	return cmd, nil, false
+	return cmd, false
+}
+
+func errorf(format string, args ...interface{}) (Command, bool) {
+	return Command{err: fmt.Errorf(format, args)}, false
 }
